@@ -4,68 +4,136 @@ import (
     "fmt"
     "image"
     "image/color"
-    // "reflect"
-
+    "time"
+    "math"
     g "github.com/AllenDang/giu"
 )
 
-type CircleButtonWidget struct {
-    id      string
-    clicked func()
+
+var circle1 *CircleObject
+var line1 *LineObject
+
+type LineObject struct {
+    id string
+    startX float64
+    startY float64
+    endX float64
+    endY float64
+    beta float64
+    constant float64
 }
 
-func CircleButton(id string, clicked func()) *CircleButtonWidget {
-    return &CircleButtonWidget{
+
+type CircleObject struct {
+    id      string
+    xAxis      float64
+    yAxis      float64
+    speedOnX   float64
+    speedOnY   float64
+    circleRadius     float64
+}
+
+
+func Line(id string, startX float64, startY float64, endX float64, endY float64) *LineObject {
+    beta := (endY - startY)/(endX-startX)
+    constant := startY - startX * beta
+
+
+    return &LineObject{
         id:      id,
-        clicked: clicked,
+        startX:   startX,
+        startY:   startY,
+        endX: endX,
+        endY: endY,
+        beta: beta,
+        constant: constant,
     }
 }
 
-func (c *CircleButtonWidget) Build() {
-    width, _ := g.CalcTextSize(c.id)
-    var padding float32 = 12.0
 
-    // pos := g.GetCursorPos()
-    // fmt.Println("pos is: ", pos)
-    // fmt.Println(reflect.TypeOf(pos.X))
-    ctr := image.Pt(300, 20)
+func (l *LineObject) Update() {
+    // fmt.Println("I am static")
+}
 
+func (l *LineObject) Build() {
+    
+    startPoint := image.Pt(int(l.startX), int(l.startY))
+    endPoint := image.Pt(int(l.endX), int(l.endY))
 
-    // Calcuate the center point
-    radius := int(width/2 + padding*2)
-
-    // Place a invisible button to be a placeholder for events
-    buttonWidth := float32(radius) * 2
-    g.InvisibleButton().Size(buttonWidth, buttonWidth).OnClick(c.clicked).Build()
-
-    // If button is hovered
-    drawActive := g.IsItemHovered()
-
-    // Draw circle
-    center := ctr.Add(image.Pt(radius, radius))
+    // Draw line
 
     canvas := g.GetCanvas()
-    if drawActive {
-        canvas.AddCircleFilled(center, float32(radius), color.RGBA{12, 12, 200, 255})
+    canvas.AddLine(startPoint, endPoint, color.RGBA{200, 12, 12, 255}, 2)
+
+}
+
+
+func Circle(id string, xAxis float64, yAxis float64, speedOnX float64, speedOnY float64, circleRadius float64) *CircleObject {
+    return &CircleObject{
+        id:      id,
+        xAxis:   xAxis,
+        yAxis:   yAxis,
+        speedOnX: speedOnX,
+        speedOnY: speedOnY,
+        circleRadius: circleRadius,
     }
-    canvas.AddCircle(center, float32(radius), color.RGBA{200, 12, 12, 255}, radius, 2)
-
-    // Draw text
-    // canvas.AddText(center.Sub(image.Pt(int((width)/2), int(height/2))), color.RGBA{255, 255, 255, 255}, c.id)
 }
 
-
-func onCircleButton() {
-    fmt.Println("Circle Button")
+func (c *CircleObject) Update() {
+    c.xAxis += c.speedOnX
+    c.yAxis += c.speedOnY
+    if c.xAxis > 1200 - 2 * c.circleRadius || c.xAxis < 0  {
+        c.speedOnX = -c.speedOnX
+    }
+    if c.yAxis > 900 - 2 * c.circleRadius || c.yAxis < 0  {
+        c.speedOnY = -c.speedOnY
+    }
 }
+
+func (c *CircleObject) Build() {
+    ctr := image.Pt(int(c.xAxis), int(c.yAxis))
+
+    // Draw circle
+    center := ctr.Add(image.Pt(int(c.circleRadius), int(c.circleRadius)))
+
+    canvas := g.GetCanvas()
+    canvas.AddCircle(center, float32(c.circleRadius), color.RGBA{200, 12, 12, 255}, int(c.circleRadius), 2)
+}
+
+func collisionCheck(c *CircleObject, l *LineObject) {
+    d  := math.Abs(l.beta * (c.xAxis + c.circleRadius) - (c.yAxis + c.circleRadius) + l.constant)/math.Sqrt(l.beta * l.beta + 1)
+    if d < c.circleRadius {
+        fmt.Println("Collision!")
+    } else {
+        fmt.Println("We are cool!")
+    }
+
+}
+
 
 func loop() {
+    
     g.SingleWindow().Layout(
-        CircleButton("Circle Button", onCircleButton),
+        circle1,
+        line1,
     )
+    circle1.Update()
+    line1.Update()
+    collisionCheck(circle1, line1)
 }
 
 func main() {
-    wnd := g.NewMasterWindow("Custom Widget", 1200, 900, g.MasterWindowFlagsNotResizable)
+    circle1 = Circle("Circle",100,100,1,1, 100)
+    line1 = Line("Line",0,800,1200,500)
+
+    wnd := g.NewMasterWindow("Custom Widget", 1200, 900, 0)
+
+    go func() {
+        for {
+            time.Sleep(time.Duration(1 * time.Millisecond))
+            g.Update()
+        }
+    }()
+
     wnd.Run(loop)
 }
