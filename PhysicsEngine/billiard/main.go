@@ -12,7 +12,7 @@ import (
 
 var circle1 *CircleObject
 var line1 *LineObject
-
+var gravity float64 = 0.98
 type LineObject struct {
     id string
     startX float64
@@ -88,6 +88,7 @@ func (c *CircleObject) Update() {
     if c.yAxis > 900 - 2 * c.circleRadius || c.yAxis < 0  {
         c.speedOnY = -c.speedOnY
     }
+    c.speedOnY += gravity
 }
 
 func (c *CircleObject) Build() {
@@ -104,6 +105,7 @@ func collisionCheck(c *CircleObject, l *LineObject) {
     d  := math.Abs(l.beta * (c.xAxis + c.circleRadius) - (c.yAxis + c.circleRadius) + l.constant)/math.Sqrt(l.beta * l.beta + 1)
     if d < c.circleRadius {
         fmt.Println("Collision!")
+        // collisionResolve()
     } else {
         fmt.Println("We are cool!")
     }
@@ -123,7 +125,7 @@ func loop() {
 }
 
 func main() {
-    circle1 = Circle("Circle",100,100,1,1, 100)
+    circle1 = Circle("Circle",100,100,1,2, 100)
     line1 = Line("Line",0,800,1200,500)
 
     wnd := g.NewMasterWindow("Custom Widget", 1200, 900, 0)
