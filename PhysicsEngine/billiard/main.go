@@ -14,7 +14,6 @@ var circle1 *CircleObject
 var line1 *LineObject
 var gravity float64 = 0.98
 var lineAlpha float64
-var circleSpeed float64
 
 type LineObject struct {
 	id       string
@@ -33,6 +32,7 @@ type CircleObject struct {
 	speedOnX     float64
 	speedOnY     float64
 	circleRadius float64
+    circleSpeed  float64
 }
 
 func Line(id string, startX float64, startY float64, endX float64, endY float64) *LineObject {
@@ -80,15 +80,7 @@ func Circle(id string, xAxis float64, yAxis float64, speedOnX float64, speedOnY 
 func (c *CircleObject) Update() {
 	c.xAxis += c.speedOnX
 	c.yAxis += c.speedOnY
-	if c.xAxis > 1200-2*c.circleRadius || c.xAxis < 0 {
-		c.speedOnX = -c.speedOnX
-	}
-	if c.yAxis > 900-2*c.circleRadius || c.yAxis < 0 {
-		c.speedOnY = -c.speedOnY
-	} else {
-		c.speedOnY += gravity
-	}
-	circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
+	c.circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
 }
 
 func (c *CircleObject) Build() {
@@ -116,37 +108,36 @@ func collisionCheck(c *CircleObject, l *LineObject) bool {
 func collisionResolve(c *CircleObject, l *LineObject) {
 	speedTheta := math.Atan2(c.speedOnY, c.speedOnX)
 
-	c.speedOnX = circleSpeed * math.Cos(2*lineAlpha-speedTheta)
-	c.speedOnY = circleSpeed * math.Sin(2*lineAlpha-speedTheta)
+	c.speedOnX = c.circleSpeed * math.Cos(2*lineAlpha-speedTheta)
+	c.speedOnY = c.circleSpeed * math.Sin(2*lineAlpha-speedTheta)
 
 }
 
-// func groundCheck(c *CircleObject, l *LineObject) bool {
-// 	if c.xAxis > 1200-2*c.circleRadius || c.xAxis < 0 {
-// 		groundResolveX(c)
-// 		return true
-// 	}
-// 	if c.yAxis > 900-2*c.circleRadius || c.yAxis < 0 {
-// 		groundResolveY(c)
-//         c.speedOnY += gravity
-// 		return true
-// 	}
-// 	return false
-// }
+func groundCheck(c *CircleObject) bool {
+	if c.xAxis > 1200-2*c.circleRadius || c.xAxis < 0 {
+		groundResolveX(c)
+		return true
+	}
+	if c.yAxis > 900-2*c.circleRadius || c.yAxis < 0 {
+		groundResolveY(c)
+		return true
+	} else {
+        addGravity(c)
+        return false
+    }
+}
 
-// func groundResolveX(c *CircleObject) {
-// 	c.speedOnX = -c.speedOnX
-// 	circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
-// }
+func groundResolveX(c *CircleObject) {
+	c.speedOnX = -c.speedOnX
+}
 
-// func groundResolveY(c *CircleObject) {
-// 	c.speedOnY = -c.speedOnY
-// 	circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
-// }
+func groundResolveY(c *CircleObject) {
+	c.speedOnY = -c.speedOnY
+}
 
-// func addGravity(c *CircleObject) {
-// 	c.speedOnY += gravity
-// }
+func addGravity(c *CircleObject) {
+	c.speedOnY += gravity
+}
 
 func loop() {
 
@@ -156,17 +147,8 @@ func loop() {
 	)
 	circle1.Update()
 	line1.Update()
-	// groundCheck(circle1, line1)
+	groundCheck(circle1)
 	collisionCheck(circle1, line1)
-	// groundCollided := groundCheck(circle1, line1)
-	// if !groundCollided {
-	//     fmt.Println("Gound not colided")
-	// 	lopeCollided := collisionCheck(circle1, line1)
-	// 	if !lopeCollided {
-	//         fmt.Println("lope not colided")
-	// 		addGravity(circle1)
-	// 	}
-	// }
 }
 
 func main() {
