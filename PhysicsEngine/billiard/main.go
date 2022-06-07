@@ -101,13 +101,15 @@ func (c *CircleObject) Build() {
 	canvas.AddCircle(center, float32(c.circleRadius), color.RGBA{200, 12, 12, 255}, int(c.circleRadius), 2)
 }
 
-func collisionCheck(c *CircleObject, l *LineObject) {
+func collisionCheck(c *CircleObject, l *LineObject) bool {
 	d := math.Abs(l.beta*(c.xAxis+c.circleRadius)-(c.yAxis+c.circleRadius)+l.constant) / math.Sqrt(l.beta*l.beta+1)
 	if d < c.circleRadius {
 		fmt.Println("Collision!")
 		collisionResolve(c, l)
+		return true
 	} else {
 		fmt.Println("We are cool!")
+		return false
 	}
 }
 
@@ -119,6 +121,33 @@ func collisionResolve(c *CircleObject, l *LineObject) {
 
 }
 
+// func groundCheck(c *CircleObject, l *LineObject) bool {
+// 	if c.xAxis > 1200-2*c.circleRadius || c.xAxis < 0 {
+// 		groundResolveX(c)
+// 		return true
+// 	}
+// 	if c.yAxis > 900-2*c.circleRadius || c.yAxis < 0 {
+// 		groundResolveY(c)
+//         c.speedOnY += gravity
+// 		return true
+// 	}
+// 	return false
+// }
+
+// func groundResolveX(c *CircleObject) {
+// 	c.speedOnX = -c.speedOnX
+// 	circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
+// }
+
+// func groundResolveY(c *CircleObject) {
+// 	c.speedOnY = -c.speedOnY
+// 	circleSpeed = math.Sqrt(c.speedOnX*c.speedOnX + c.speedOnY*c.speedOnY)
+// }
+
+// func addGravity(c *CircleObject) {
+// 	c.speedOnY += gravity
+// }
+
 func loop() {
 
 	g.SingleWindow().Layout(
@@ -127,7 +156,17 @@ func loop() {
 	)
 	circle1.Update()
 	line1.Update()
+	// groundCheck(circle1, line1)
 	collisionCheck(circle1, line1)
+	// groundCollided := groundCheck(circle1, line1)
+	// if !groundCollided {
+	//     fmt.Println("Gound not colided")
+	// 	lopeCollided := collisionCheck(circle1, line1)
+	// 	if !lopeCollided {
+	//         fmt.Println("lope not colided")
+	// 		addGravity(circle1)
+	// 	}
+	// }
 }
 
 func main() {
@@ -140,7 +179,7 @@ func main() {
 
 	go func() {
 		for {
-			time.Sleep(time.Duration(10 * time.Millisecond))
+			time.Sleep(time.Duration(1 * time.Millisecond))
 			g.Update()
 		}
 	}()
